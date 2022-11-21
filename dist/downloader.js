@@ -94,7 +94,6 @@ function download(ref, outputFileName) {
                 'pipe'
             ]
         });
-        console.log(ffmpegProcess);
         // console.log(ffmpegProcess)
         ffmpegProcess.on('close', () => {
             console.log('done');

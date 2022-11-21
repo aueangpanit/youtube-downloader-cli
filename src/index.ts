@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { prompt } from 'enquirer'
 import ytdl from 'ytdl-core'
 import { download } from './downloader'
