@@ -14,20 +14,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const enquirer_1 = require("enquirer");
+const fs_1 = __importDefault(require("fs"));
 const ytdl_core_1 = __importDefault(require("ytdl-core"));
-const downloader_1 = require("./downloader");
+const utils_1 = require("./utils");
 (() => __awaiter(void 0, void 0, void 0, function* () {
     const { url } = yield (0, enquirer_1.prompt)({
         type: 'input',
         name: 'url',
         message: 'Please enter the YouTube video URL'
     });
+    // Get video info
     const info = yield ytdl_core_1.default.getBasicInfo(url);
-    const output = `${info.videoDetails.publishDate} ${info.videoDetails.title}`;
-    yield (0, downloader_1.download)(url, output);
-    // await new Promise(r => setTimeout(r, 1 * 1000))
-    // console.info('Renaming to: ', output)
-    // retry(() => {
-    //   fs.renameSync(`${process.cwd()}\\output.mkv`, `${process.cwd()}\\${output}`)
-    // })
+    const outputFileName = (0, utils_1.getOutputFileName)(info);
+    // Download thumbnail and convert it to .png
+    const imageOutputFileName = `${process.cwd()}/temp_thumbnail.png`;
+    yield (0, utils_1.processImage)(info.videoDetails.thumbnails[info.videoDetails.thumbnails.length - 1].url, imageOutputFileName);
+    // Download video, attach thumbnail and convert it to .mp4
+    yield (0, utils_1.processVideo)(url, outputFileName, imageOutputFileName);
+    // Delete downloaded thumbnail image
+    console.info('Cleaning up files...');
+    fs_1.default.unlinkSync(imageOutputFileName);
+    console.info('Cleanup successful');
 }))();

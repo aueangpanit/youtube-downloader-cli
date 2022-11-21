@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import { prompt } from 'enquirer'
+import fs from 'fs'
 import ytdl from 'ytdl-core'
-import { download } from './downloader'
+import { getOutputFileName, processImage, processVideo } from './utils'
 ;(async () => {
   const { url } = await prompt<{ url: string }>({
     type: 'input',
@@ -10,14 +11,22 @@ import { download } from './downloader'
     message: 'Please enter the YouTube video URL'
   })
 
+  // Get video info
   const info = await ytdl.getBasicInfo(url)
-  const output = `${info.videoDetails.publishDate} ${info.videoDetails.title}`
+  const outputFileName = getOutputFileName(info)
 
-  await download(url, output)
+  // Download thumbnail and convert it to .png
+  const imageOutputFileName = `${process.cwd()}/temp_thumbnail.png`
+  await processImage(
+    info.videoDetails.thumbnails[info.videoDetails.thumbnails.length - 1].url,
+    imageOutputFileName
+  )
 
-  // await new Promise(r => setTimeout(r, 1 * 1000))
-  // console.info('Renaming to: ', output)
-  // retry(() => {
-  //   fs.renameSync(`${process.cwd()}\\output.mkv`, `${process.cwd()}\\${output}`)
-  // })
+  // Download video, attach thumbnail and convert it to .mp4
+  await processVideo(url, outputFileName, imageOutputFileName)
+
+  // Delete downloaded thumbnail image
+  console.info('Cleaning up files...')
+  fs.unlinkSync(imageOutputFileName)
+  console.info('Cleanup successful')
 })()

@@ -17,7 +17,6 @@ const child_process_1 = __importDefault(require("child_process"));
 const readline_1 = __importDefault(require("readline"));
 // External modules
 const ffmpeg_static_1 = __importDefault(require("ffmpeg-static"));
-const fs_1 = __importDefault(require("fs"));
 const ytdl_core_1 = __importDefault(require("ytdl-core"));
 // Global constants
 // const ref = 'https://www.youtube.com/watch?v=aqz-KE-bpKQ'
@@ -28,7 +27,10 @@ const tracker = {
     video: { downloaded: 0, total: Infinity },
     merged: { frame: 0, speed: '0x', fps: 0 }
 };
-function download(ref, outputFileName) {
+function download(ref, outputFileName
+// thumbnail_url: string
+) {
+    const thumbnail_url = `${process.cwd()}/maxresdefault.png`;
     return new Promise(resolve => {
         // Get audio and video streams
         const audio = (0, ytdl_core_1.default)(ref, { quality: 'highestaudio' }).on('progress', (_, downloaded, total) => {
@@ -57,8 +59,8 @@ function download(ref, outputFileName) {
         // Start the ffmpeg child process
         const ffmpegProcess = child_process_1.default.spawn(ffmpeg_static_1.default, [
             // Remove ffmpeg's console spamming
-            '-loglevel',
-            '8',
+            // '-loglevel',
+            // '8',
             '-hide_banner',
             // Redirect/Enable progress messages
             '-progress',
@@ -68,18 +70,24 @@ function download(ref, outputFileName) {
             'pipe:4',
             '-i',
             'pipe:5',
+            '-i',
+            thumbnail_url,
             // Map audio & video from streams
             '-map',
             '0:a',
             '-map',
             '1:v',
+            '-map',
+            '2',
             // Keep encoding
             '-c:v',
             'copy',
-            // Define output file
             '-f',
-            'matroska',
-            'pipe:6'
+            'mp4',
+            // Thumbnail
+            '-disposition:2',
+            'attached_pic',
+            `${process.cwd()}/${outputFileName}.mp4`
         ], {
             windowsHide: true,
             stdio: [
@@ -88,7 +96,6 @@ function download(ref, outputFileName) {
                 'inherit',
                 'inherit',
                 /* Custom: pipe:3, pipe:4, pipe:5 */
-                'pipe',
                 'pipe',
                 'pipe',
                 'pipe'
@@ -119,7 +126,9 @@ function download(ref, outputFileName) {
         });
         audio.pipe(ffmpegProcess.stdio[4]);
         video.pipe(ffmpegProcess.stdio[5]);
-        ffmpegProcess.stdio[6].pipe(fs_1.default.createWriteStream(`${process.cwd()}/${outputFileName}.mkv`));
+        // ffmpegProcess.stdio[6].pipe(
+        //   fs.createWriteStream(`${process.cwd()}/${outputFileName}.mp4`)
+        // )
     });
 }
 exports.download = download;
