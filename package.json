@@ -35,5 +35,13 @@
   },
   "bin": {
     "ytd": "./dist/index.js"
-  }
+  },
+  "keywords": [
+    "youtube",
+    "video",
+    "audio",
+    "download",
+    "cli",
+    "terminal"
+  ]
 }
